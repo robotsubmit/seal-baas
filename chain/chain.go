@@ -10,16 +10,29 @@ import (
 
 type BlockChain struct {
 	mu           sync.RWMutex
-	blockDb      storage.Database
+	blockDb      *Store
 	currentBlock *types.Block
 	genesisBlock *types.Block
+	height       uint64
 }
 
-func NewBlockChain(db storage.Database) BlockChain {
+func NewBlockChain(db *storage.Database) *BlockChain {
+	st := NewStore(db)
 	bc := &BlockChain{
-		blockDb: db,
+		blockDb: st,
 	}
 
+	if cur, err := bc.CurrentBlock(); err != nil {
+		bc.genesisBlock = NewGenesisBlock()
+		bc.currentBlock = bc.genesisBlock
+		bc.height = 0
+	} else {
+		bc.height = cur.GetHeight()
+		bc.currentBlock = cur
+		bc.genesisBlock = bc.GetBlockByHeight(0)
+	}
+
+	return bc
 }
 
 func (this *BlockChain) GetBlockByHash(hash crypto.Digest) *types.Block {
