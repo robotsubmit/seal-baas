@@ -9,11 +9,11 @@ import (
 //go:generate msgp -tests=false
 
 type Header struct {
-	ChainID    byte        `msg:"id"`
-	ParentHash crypto.Hash `msg:"parent"`
-	TxRootHash crypto.Hash `msg:"txRoot"`
-	//ReceiptHash crypto.Hash `msg:"receiptHash"`
-	//AccountHash crypto.Hash `msg:"accountHash"`
+	ChainID    byte          `msg:"id"`
+	ParentHash crypto.Digest `msg:"parent"`
+	TxRootHash crypto.Digest `msg:"txRoot"`
+	//ReceiptHash crypto.Digest `msg:"receiptHash"`
+	//AccountHash crypto.Digest `msg:"accountHash"`
 	Height      uint64         `msg:"height"`
 	Nonce       uint64         `msg:"nonce"`
 	CreatedTime uint64         `msg:"time"`
@@ -94,3 +94,24 @@ func (this *Block) Verify(pubkey *crypto.PublicKey) error {
 func (this *Block) AttachSignature(sig []byte) {
 	this.Signature = sig
 }
+
+func (this *Block) GetTransactionByHash(hash *crypto.Digest) (Transaction, error) {
+	for _, tx := range this.Txs {
+		if hash.CompareTo(tx.Hash()) != 0 { //cache hash in Transaction
+			return tx, nil
+		}
+	}
+
+	return nil, errors.New("no transaction")
+}
+
+func (this *Block) GetChainID() byte               { return this.ChainID }
+func (this *Block) GetParentHash() crypto.Digest   { return this.ParentHash }
+func (this *Block) GetTxRootHash() crypto.Digest   { return this.TxRootHash }
+func (this *Block) GetHeight() uint64              { return this.Height }
+func (this *Block) GetNonce() uint64               { return this.Nonce }
+func (this *Block) GetCreateTime() uint64          { return this.CreatedTime }
+func (this *Block) GetCoinbase() crypto.Address    { return this.Coinbase }
+func (this *Block) GetHeader() *Header             { return this.Header }
+func (this *Block) GetTransactions() []Transaction { return this.Txs }
+func (this *Block) GetSignature() []byte           { return this.Signature }
