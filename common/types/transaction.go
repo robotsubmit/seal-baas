@@ -1,6 +1,10 @@
 package types
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/d5c5ceb0/newchain/crypto"
+)
 
 //go:generate msgp -tests=false
 
@@ -29,6 +33,16 @@ func (this *Transaction) Unmarshal(r []byte) error {
 	return err
 }
 
-func (this *Transaction) Hash()
+func (this *Transaction) Hash() {
+}
 
-func (this *Transaction) Verify()
+func (this *Transaction) Verify() {
+}
+
+func (this *Transaction) GetNonce() uint64      { return this.Nonce }
+func (this *Transaction) GetSender() Address    { return this.Sender }
+func (this *Transaction) GetRecipient() Address { return this.Recipient }
+func (this *Transaction) GetValue() int64       { return this.Value }
+func (this *Transaction) GetFee() int64         { return this.Fee }
+func (this *Transaction) GetData() int64        { return this.Data }
+func (this *Transaction) GetSignature() []byte  { return this.Signature }
