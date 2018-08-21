@@ -12,8 +12,8 @@ import (
 type BlockChain struct {
 	mu           sync.RWMutex
 	blockDb      *Store
-	currentBlock *types.Block
 	genesisBlock *types.Block
+	currentBlock *types.Block
 	height       uint64
 }
 
@@ -57,17 +57,20 @@ func (this *BlockChain) GetBlocks(heights []uint64) ([]*types.Block, error) {
 	return blocks, nil
 }
 
-func (this *BlockChain) AddBlock(block *types.Block) (uint64, error) {
+func (this *BlockChain) AddBlock(block *types.Block) error {
 	if block.Validation() != nil {
-		return 0, errors.New("block verify error")
+		return errors.New("block verify error")
 	}
 
-	height, err := this.blockDb.blockDbBlock(block)
+	err := this.blockDb.blockDbBlock(block)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	return height, err
+	this.currentBlock = block
+	this.height = block.GetHeight()
+
+	return err
 }
 
 func (this *BlockChain) CurrentBlock() crypto.Digest {
