@@ -16,7 +16,7 @@ func main() {
 	blockchain := chain.NewBlockChain(db)
 
 	for i := 0; i < 100000; i++ {
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Second)
 		fmt.Println(blockchain.CurrentBlockHash())
 	}
 

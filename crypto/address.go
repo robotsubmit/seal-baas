@@ -30,11 +30,11 @@ func GenAddress(code []byte) (Address, error) {
 	return addr, nil
 }
 
-func (this *Digest) Marshal() ([]byte, error) {
+func (this *Address) Marshal() ([]byte, error) {
 	return this.MarshalMsg(nil)
 }
 
-func (this *Digest) Unmarshal(r []byte) error {
+func (this *Address) Unmarshal(r []byte) error {
 	rem, err := this.UnmarshalMsg(r)
 	if len(rem) != 0 {
 		return errors.New("unmarshal error.")

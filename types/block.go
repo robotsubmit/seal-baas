@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/d5c5ceb0/newchain/crypto"
-	"github.com/d5c5ceb0/newchain/types"
 )
 
 //go:generate msgp -tests=false
@@ -18,7 +17,7 @@ type Header struct {
 	//AccountHash crypto.Digest `msg:"accountHash"`
 	Height      uint64         `msg:"height"`
 	Nonce       uint64         `msg:"nonce"`
-	CreatedTime uint64         `msg:"time"`
+	CreatedTime int64          `msg:"time"`
 	Coinbase    crypto.Address `msg:"coinbase"`
 }
 
@@ -86,7 +85,7 @@ func (this *Block) Sign(privkey *crypto.PrivateKey) ([]byte, error) {
 func (this *Block) Verify(pubkey *crypto.PublicKey) error {
 	hash, err := this.Header.Hash()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	return pubkey.Verify(hash[:], this.Signature)
@@ -97,17 +96,25 @@ func (this *Block) AttachSignature(sig []byte) {
 	this.Signature = sig
 }
 
+func (this *Block) Validation() error {
+	return nil
+}
+
 func (this *Block) GetTransactionByHash(hash *crypto.Digest) (Transaction, error) {
 	for _, tx := range this.Txs {
-		if hash.CompareTo(tx.Hash()) != 0 { //cache hash in Transaction
+		h, err := tx.Hash()
+		if err != nil {
+			return Transaction{}, err
+		}
+		if hash.CompareTo(h) != 0 { //cache hash in Transaction
 			return tx, nil
 		}
 	}
 
-	return nil, errors.New("no transaction")
+	return Transaction{}, errors.New("no transaction")
 }
 
-func NewGenesisBlock() *types.Block {
+func NewGenesisBlock() *Block {
 	genesisHeader := &Header{
 		ChainID:     DefaultChainID,
 		ParentHash:  crypto.Digest{},
@@ -118,7 +125,7 @@ func NewGenesisBlock() *types.Block {
 	}
 	// genesis block
 	genesisBlock := &Block{
-		Header: genesisHeader,
+		Header: *genesisHeader,
 	}
 
 	return genesisBlock
@@ -129,8 +136,8 @@ func (this *Block) GetParentHash() crypto.Digest   { return this.ParentHash }
 func (this *Block) GetTxRootHash() crypto.Digest   { return this.TxRootHash }
 func (this *Block) GetHeight() uint64              { return this.Height }
 func (this *Block) GetNonce() uint64               { return this.Nonce }
-func (this *Block) GetCreateTime() uint64          { return this.CreatedTime }
+func (this *Block) GetCreateTime() int64           { return this.CreatedTime }
 func (this *Block) GetCoinbase() crypto.Address    { return this.Coinbase }
-func (this *Block) GetHeader() *Header             { return this.Header }
+func (this *Block) GetHeader() *Header             { return &this.Header }
 func (this *Block) GetTransactions() []Transaction { return this.Txs }
 func (this *Block) GetSignature() []byte           { return this.Signature }

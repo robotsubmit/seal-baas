@@ -22,7 +22,7 @@ type TxContent struct {
 	Data      []byte         `msg:"data"`
 }
 
-func (this *TxContent) Hash() (Digest, error) {
+func (this *TxContent) Hash() (crypto.Digest, error) {
 	data, err := this.Marshal()
 	if err != nil {
 		return crypto.Digest{}, err
@@ -49,17 +49,17 @@ type Transaction struct {
 }
 
 func NewTransaction(nonce uint64, from, to crypto.Address, value, fee int64, data []byte) *Transaction {
-	data := TxContent{
+	d := TxContent{
 		ChainID:   DefaultChainID,
 		Nonce:     nonce,
-		Sender:    &from,
-		Recipient: &to,
+		Sender:    from,
+		Recipient: to,
 		Value:     value,
 		Fee:       fee,
 		Data:      data,
 	}
 
-	return &Transaction{TxContent: data}
+	return &Transaction{TxContent: d}
 }
 
 func (this *Transaction) Marshal() ([]byte, error) {
@@ -99,7 +99,7 @@ func (this *Transaction) AttachSignature(sig []byte) {
 func (this *Transaction) Verify(pubkey *crypto.PublicKey) error {
 	hash, err := this.TxContent.Hash()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	return pubkey.Verify(hash[:], this.Signature)
@@ -109,10 +109,10 @@ func (this *Transaction) Validation() error {
 	return nil
 }
 
-func (this *Transaction) GetNonce() uint64      { return this.Nonce }
-func (this *Transaction) GetSender() Address    { return this.Sender }
-func (this *Transaction) GetRecipient() Address { return this.Recipient }
-func (this *Transaction) GetValue() int64       { return this.Value }
-func (this *Transaction) GetFee() int64         { return this.Fee }
-func (this *Transaction) GetData() int64        { return this.Data }
-func (this *Transaction) GetSignature() []byte  { return this.Signature }
+func (this *Transaction) GetNonce() uint64             { return this.Nonce }
+func (this *Transaction) GetSender() crypto.Address    { return this.Sender }
+func (this *Transaction) GetRecipient() crypto.Address { return this.Recipient }
+func (this *Transaction) GetValue() int64              { return this.Value }
+func (this *Transaction) GetFee() int64                { return this.Fee }
+func (this *Transaction) GetData() []byte              { return this.Data }
+func (this *Transaction) GetSignature() []byte         { return this.Signature }

@@ -4,9 +4,9 @@ import (
 	"encoding/binary"
 	"errors"
 
+	"github.com/d5c5ceb0/newchain/crypto"
 	"github.com/d5c5ceb0/newchain/storage"
 	"github.com/d5c5ceb0/newchain/types"
-	"github.com/nknorg/coniks-go/crypto"
 )
 
 type DbPrefix byte
@@ -19,17 +19,17 @@ const (
 )
 
 type Store struct {
-	db *storage.Database
+	db storage.Database
 }
 
-func NewStore(db *storage.Database) *Store {
+func NewStore(db storage.Database) *Store {
 	return &Store{
 		db: db,
 	}
 }
 
 func (this *Store) StoreBlock(block *types.Block) error {
-	hash := block.Hash()
+	hash, _ := block.Hash()
 	height := block.GetHeight()
 	data, err := block.Marshal()
 	if err != nil {
@@ -41,8 +41,10 @@ func (this *Store) StoreBlock(block *types.Block) error {
 		return errors.New("store block error")
 	}
 
+	index := make([]byte, 8)
+	binary.LittleEndian.PutUint64(index, height)
 	heightPrefix := []byte{byte(BlockHashByHeight)}
-	if err := this.db.Put(append(prefix, index...)); err != nil {
+	if err := this.db.Put(append(heightPrefix, index...), hash.ToBytes()); err != nil {
 		return errors.New("store blockhash error")
 	}
 
@@ -51,20 +53,39 @@ func (this *Store) StoreBlock(block *types.Block) error {
 
 func (this *Store) GetBlockByHash(hash *crypto.Digest) (*types.Block, error) {
 	prefix := []byte{byte(BlockByHash)}
-	return this.db.Get(append(prefix, hash.ToBytes()...))
+	data, err := this.db.Get(append(prefix, hash.ToBytes()...))
+	if err != nil {
+		return nil, err
+	}
+
+	var b types.Block
+	err = b.Unmarshal(data)
+	return &b, err
 }
 
 func (this *Store) GetBlockByHeight(height uint64) (*types.Block, error) {
 	index := make([]byte, 8)
 	binary.LittleEndian.PutUint64(index, height)
 	prefix := []byte{byte(BlockHashByHeight)}
-	hash := this.db.Get(append(prefix, index...))
-	return this.GetBlockByHash(hash)
+	hash, err := this.db.Get(append(prefix, index...))
+	if err != nil {
+		return nil, err
+	}
+	var h crypto.Digest
+	copy(h[:], hash)
+	return this.GetBlockByHash(&h)
 }
 
 func (this *Store) GetCurrentBlock() (*types.Block, error) {
 	prefix := []byte{byte(CurrentBlock)}
-	return this.db.Get(prefix)
+	data, err := this.db.Get(prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	var b types.Block
+	err = b.Unmarshal(data)
+	return &b, err
 }
 
 func (this *Store) GetAccount() {

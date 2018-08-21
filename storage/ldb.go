@@ -1,14 +1,21 @@
 package storage
 
+import (
+	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/errors"
+	"github.com/syndtr/goleveldb/leveldb/filter"
+	"github.com/syndtr/goleveldb/leveldb/opt"
+)
+
 var (
 	BitsPerKey    = 10
 	OpenFileLimit = 64
 )
 
-func NewLevelDB(file string) (*LevelDB, error) {
+func NewLevelDB(file string) (*LDBStore, error) {
 	opts := opt.Options{
 		NoSync:                 false,
-		Filter:                 filter.NewBloomFilter(BITSPERKEY),
+		Filter:                 filter.NewBloomFilter(BitsPerKey),
 		OpenFilesCacheCapacity: OpenFileLimit,
 	}
 
@@ -22,31 +29,31 @@ func NewLevelDB(file string) (*LevelDB, error) {
 		return nil, err
 	}
 
-	return &LevelDB{
+	return &LDBStore{
 		fn: file,
 		db: db,
 	}, nil
 }
 
-type LevelDB struct {
+type LDBStore struct {
 	fn string
 	db *leveldb.DB
 }
 
-func (self *LevelDB) Put(key []byte, value []byte) error {
+func (self *LDBStore) Put(key []byte, value []byte) error {
 	return self.db.Put(key, value, nil)
 }
 
-func (self *LevelDB) Get(key []byte) ([]byte, error) {
+func (self *LDBStore) Get(key []byte) ([]byte, error) {
 	dat, err := self.db.Get(key, nil)
 	return dat, err
 }
 
-func (self *LevelDB) Delete(key []byte) error {
+func (self *LDBStore) Delete(key []byte) error {
 	return self.db.Delete(key, nil)
 }
 
-func (self *LevelDB) Close() error {
+func (self *LDBStore) Close() error {
 	if err := self.Commit(); err != nil {
 		return err
 	}
@@ -54,6 +61,6 @@ func (self *LevelDB) Close() error {
 	return self.db.Close()
 }
 
-func (self *LevelDB) Commit() error {
+func (self *LDBStore) Commit() error {
 	return nil
 }

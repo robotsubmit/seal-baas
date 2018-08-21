@@ -29,25 +29,26 @@ func GenerateKey() (PrivateKey, PublicKey, error) {
 			return nil, nil, errors.New("Generate key pair error")
 		}
 
-		priKey = privateKey.D.Bytes()
+		prikey = privateKey.D.Bytes()
 		pubkey = elliptic.Marshal(elliptic.P256(), privateKey.PublicKey.X, privateKey.PublicKey.Y)
 	}
 
 	return prikey, pubkey, nil
 }
 
-func Sign(hash []byte, prv *PrivateKey) (sig []byte, err error) {
+func Sign(hash []byte, prikey *PrivateKey) (sig []byte, err error) {
 	if len(hash) != DigestLength {
-		return nil, errors.New("hash is need to be %d bytes (but %d)", DigestLength, len(hash))
+		return nil, errors.New("length of hash is error")
 	}
 
 	switch SelectedSigAlgo {
 	case "p256r1":
 		privateKey := new(ecdsa.PrivateKey)
 		privateKey.Curve = elliptic.P256()
-		privateKey.D.SetBytes(priKey)
+		privateKey.D.SetBytes([]byte(*prikey))
 
-		r, s, err := ecdsa.Sign(rand.Reader, privateKey, hash[:])
+		var r, s *big.Int
+		r, s, err = ecdsa.Sign(rand.Reader, privateKey, hash[:])
 		if err != nil {
 			fmt.Printf("Sign error\n")
 			return
@@ -64,17 +65,17 @@ func (this *PublicKey) Verify(hash []byte, sig []byte) error {
 
 	switch SelectedSigAlgo {
 	case "p256r1":
-		x, y := elliptic.Unmarshal(elliptic.P256(), this)
+		x, y := elliptic.Unmarshal(elliptic.P256(), []byte(*this))
 		pubkey := new(ecdsa.PublicKey)
 		pubkey.Curve = elliptic.P256()
 		pubkey.X = new(big.Int).Set(x)
 		pubkey.Y = new(big.Int).Set(y)
 
 		var r, s big.Int
-		r.SetBits(sig[:len(sig)])
-		s.SetBits(sig[len(sig):])
+		r.SetBytes(sig[:len(sig)])
+		s.SetBytes(sig[len(sig):])
 
-		if ecdsa.Verify(pubkey, hash[:], r, s) {
+		if ecdsa.Verify(pubkey, hash[:], &r, &s) {
 			return nil
 		} else {
 			return errors.New("Verify failed.")
@@ -85,7 +86,7 @@ func (this *PublicKey) Verify(hash []byte, sig []byte) error {
 }
 
 func (this *PublicKey) ToAddress() (Address, error) {
-	return GenAddress(this)
+	return GenAddress([]byte(*this))
 }
 
 func (this *PublicKey) Marshal() ([]byte, error) {
