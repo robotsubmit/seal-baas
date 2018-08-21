@@ -22,6 +22,125 @@ func (z *Transaction) DecodeMsg(dc *msgp.Reader) (err error) {
 			return
 		}
 		switch msgp.UnsafeString(field) {
+		case "txContent":
+			err = z.TxContent.DecodeMsg(dc)
+			if err != nil {
+				return
+			}
+		case "signature":
+			z.Signature, err = dc.ReadBytes(z.Signature)
+			if err != nil {
+				return
+			}
+		default:
+			err = dc.Skip()
+			if err != nil {
+				return
+			}
+		}
+	}
+	return
+}
+
+// EncodeMsg implements msgp.Encodable
+func (z *Transaction) EncodeMsg(en *msgp.Writer) (err error) {
+	// map header, size 2
+	// write "txContent"
+	err = en.Append(0x82, 0xa9, 0x74, 0x78, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74)
+	if err != nil {
+		return
+	}
+	err = z.TxContent.EncodeMsg(en)
+	if err != nil {
+		return
+	}
+	// write "signature"
+	err = en.Append(0xa9, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65)
+	if err != nil {
+		return
+	}
+	err = en.WriteBytes(z.Signature)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// MarshalMsg implements msgp.Marshaler
+func (z *Transaction) MarshalMsg(b []byte) (o []byte, err error) {
+	o = msgp.Require(b, z.Msgsize())
+	// map header, size 2
+	// string "txContent"
+	o = append(o, 0x82, 0xa9, 0x74, 0x78, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74)
+	o, err = z.TxContent.MarshalMsg(o)
+	if err != nil {
+		return
+	}
+	// string "signature"
+	o = append(o, 0xa9, 0x73, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65)
+	o = msgp.AppendBytes(o, z.Signature)
+	return
+}
+
+// UnmarshalMsg implements msgp.Unmarshaler
+func (z *Transaction) UnmarshalMsg(bts []byte) (o []byte, err error) {
+	var field []byte
+	_ = field
+	var zb0001 uint32
+	zb0001, bts, err = msgp.ReadMapHeaderBytes(bts)
+	if err != nil {
+		return
+	}
+	for zb0001 > 0 {
+		zb0001--
+		field, bts, err = msgp.ReadMapKeyZC(bts)
+		if err != nil {
+			return
+		}
+		switch msgp.UnsafeString(field) {
+		case "txContent":
+			bts, err = z.TxContent.UnmarshalMsg(bts)
+			if err != nil {
+				return
+			}
+		case "signature":
+			z.Signature, bts, err = msgp.ReadBytesBytes(bts, z.Signature)
+			if err != nil {
+				return
+			}
+		default:
+			bts, err = msgp.Skip(bts)
+			if err != nil {
+				return
+			}
+		}
+	}
+	o = bts
+	return
+}
+
+// Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
+func (z *Transaction) Msgsize() (s int) {
+	s = 1 + 10 + z.TxContent.Msgsize() + 10 + msgp.BytesPrefixSize + len(z.Signature)
+	return
+}
+
+// DecodeMsg implements msgp.Decodable
+func (z *TxContent) DecodeMsg(dc *msgp.Reader) (err error) {
+	var field []byte
+	_ = field
+	var zb0001 uint32
+	zb0001, err = dc.ReadMapHeader()
+	if err != nil {
+		return
+	}
+	for zb0001 > 0 {
+		zb0001--
+		field, err = dc.ReadMapKeyPtr()
+		if err != nil {
+			return
+		}
+		switch msgp.UnsafeString(field) {
 		case "chainID":
 			z.ChainID, err = dc.ReadUint64()
 			if err != nil {
@@ -68,7 +187,7 @@ func (z *Transaction) DecodeMsg(dc *msgp.Reader) (err error) {
 }
 
 // EncodeMsg implements msgp.Encodable
-func (z *Transaction) EncodeMsg(en *msgp.Writer) (err error) {
+func (z *TxContent) EncodeMsg(en *msgp.Writer) (err error) {
 	// map header, size 7
 	// write "chainID"
 	err = en.Append(0x87, 0xa7, 0x63, 0x68, 0x61, 0x69, 0x6e, 0x49, 0x44)
@@ -137,7 +256,7 @@ func (z *Transaction) EncodeMsg(en *msgp.Writer) (err error) {
 }
 
 // MarshalMsg implements msgp.Marshaler
-func (z *Transaction) MarshalMsg(b []byte) (o []byte, err error) {
+func (z *TxContent) MarshalMsg(b []byte) (o []byte, err error) {
 	o = msgp.Require(b, z.Msgsize())
 	// map header, size 7
 	// string "chainID"
@@ -171,7 +290,7 @@ func (z *Transaction) MarshalMsg(b []byte) (o []byte, err error) {
 }
 
 // UnmarshalMsg implements msgp.Unmarshaler
-func (z *Transaction) UnmarshalMsg(bts []byte) (o []byte, err error) {
+func (z *TxContent) UnmarshalMsg(bts []byte) (o []byte, err error) {
 	var field []byte
 	_ = field
 	var zb0001 uint32
@@ -233,7 +352,7 @@ func (z *Transaction) UnmarshalMsg(bts []byte) (o []byte, err error) {
 }
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
-func (z *Transaction) Msgsize() (s int) {
+func (z *TxContent) Msgsize() (s int) {
 	s = 1 + 8 + msgp.Uint64Size + 6 + msgp.Uint64Size + 7 + z.Sender.Msgsize() + 10 + z.Recipient.Msgsize() + 6 + msgp.Int64Size + 4 + msgp.Int64Size + 5 + msgp.BytesPrefixSize + len(z.Data)
 	return
 }
