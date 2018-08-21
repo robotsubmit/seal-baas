@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/d5c5ceb0/newchain/crypto"
@@ -17,7 +18,7 @@ type BlockChain struct {
 }
 
 func NewBlockChain(db *storage.Database) *BlockChain {
-	st := NewStore(db)
+	st := NewblockDb(db)
 	bc := &BlockChain{
 		blockDb: st,
 	}
@@ -35,15 +36,75 @@ func NewBlockChain(db *storage.Database) *BlockChain {
 	return bc
 }
 
-func (this *BlockChain) GetBlockByHash(hash crypto.Digest) *types.Block {
+func (this *BlockChain) GetBlockByHash(hash *crypto.Digest) (*types.Block, error) {
+	return this.blockDb.GetBlockByHash(hash)
 }
-func (this *BlockChain) GetBlockByHeight(num uint64) *types.Block {
+func (this *BlockChain) GetBlockByHeight(height uint64) (*types.Block, error) {
+	return this.blockDb.GetBlockByHeight(height)
 }
-func (this *BlockChain) AddBlock(block types.Block) (uint64, error) {
+
+func (this *BlockChain) GetBlocks(heights []uint64) ([]*types.Block, error) {
+	var blocks []*types.Block
+	for _, height := range heights {
+
+		b, err := this.blockDb.GetBlockByHeight(height)
+		if err != nil {
+			return nil, errors.New("get block error")
+		}
+		append(blocks, b)
+	}
+
+	return blocks, nil
 }
-func (this *BlockChain) CurrentBlockHash() crypto.Digest {
+
+func (this *BlockChain) AddBlock(block *types.Block) (uint64, error) {
+	if block.Validation() != nil {
+		return 0, errors.New("block verify error")
+	}
+
+	height, err := this.blockDb.blockDbBlock(block)
+	if err != nil {
+		return 0, err
+	}
+
+	return height, err
 }
+
 func (this *BlockChain) CurrentBlock() crypto.Digest {
+	if this.CurrentBlock != nil {
+		return this.CurrentBlock, nil
+	}
+
+	b, err := this.blockDb.GetCurrentBlock()
+	if err != nil {
+		return nil, errors.New("no current block")
+	}
+
+	return b, nil
 }
-func (this *BlockChain) CurrentHeight() crypto.Digest {
+
+func (this *BlockChain) CurrentBlockHash() (crypto.Digest, error) {
+	if this.CurrentBlock != nil {
+		return this.CurrentBlock.Hash(), nil
+	}
+
+	b, err := this.blockDb.GetCurrentBlock()
+	if err != nil {
+		return nil, errors.New("no current block")
+	}
+
+	return b.Hash(), nil
+}
+
+func (this *BlockChain) CurrentHeight() (crypto.Digest, error) {
+	if this.CurrentBlock != nil {
+		return this.CurrentBlock.GetHeight(), nil
+	}
+
+	b, err := this.blockDb.GetCurrentBlock()
+	if err != nil {
+		return nil, errors.New("no current block")
+	}
+
+	return b.GetHeight(), nil
 }
