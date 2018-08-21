@@ -1,0 +1,17 @@
+package: github.com/d5c5ceb0/newchain
+ignore:
+- golang.org/x/sys/unix
+- github.com/tinylib/msgp
+- golang.org/x/crypto/ripemd160
+import:
+- package: github.com/golang/crypto
+  subpackages:
+  - ripemd160
+  - ssh/terminal
+- package: github.com/syndtr/goleveldb
+  subpackages:
+  - leveldb
+  - leveldb/errors
+  - leveldb/iterator
+  - leveldb/opt
+
