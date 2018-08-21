@@ -48,8 +48,12 @@ type Block struct {
 	Signature []byte        `msg:"sig"`
 }
 
-func NewBlock() Block {
-	return Block{}
+func NewBlock(h uint64) *Block {
+	return &Block{
+		Header: Header{
+			Height: h,
+		},
+	}
 }
 
 func (this *Block) Marshal() ([]byte, error) {

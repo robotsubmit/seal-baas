@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/d5c5ceb0/newchain/chain"
+	"github.com/d5c5ceb0/newchain/consensus/pow"
 	"github.com/d5c5ceb0/newchain/storage"
 )
 
@@ -15,8 +16,11 @@ func main() {
 	}
 	blockchain := chain.NewBlockChain(db)
 
+	consensus := pow.NewPowServer(blockchain)
+	consensus.Start()
+
 	for i := 0; i < 100000; i++ {
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 		fmt.Println(blockchain.CurrentBlockHash())
 	}
 
