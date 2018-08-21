@@ -9,13 +9,14 @@ import (
 //go:generate msgp -tests=false
 
 type Transaction struct {
+	ChainID   uint64         `msg:"chainID"`
 	Nonce     uint64         `msg:"nonce"`
 	Sender    crypto.Address `msg:"sender"`
 	Recipient crypto.Address `msg:"recipient"`
 	Value     int64          `msg:"value"`
 	Fee       int64          `msg:"fee"`
 	Data      []byte         `msg:"data"`
-	Signature []byte         `msg:"signature"`
+	Signature []byte         `msg:"-"`
 }
 
 func NewTransaction() {}
@@ -33,7 +34,15 @@ func (this *Transaction) Unmarshal(r []byte) error {
 	return err
 }
 
-func (this *Transaction) Hash() {
+func (this *Transaction) Hash() (crypto.Digest, error) {
+	data, err := this.Marshal()
+	if err != nil {
+		return crypto.Digest{}, err
+	}
+	return crypto.Hash(data), nil
+}
+
+func (this *Transaction) Sign() {
 }
 
 func (this *Transaction) Verify() {
