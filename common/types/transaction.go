@@ -30,6 +30,19 @@ func (this *TxContent) Hash() (Digest, error) {
 	return crypto.Hash(data), nil
 }
 
+func (this *TxContent) Marshal() ([]byte, error) {
+	return this.MarshalMsg(nil)
+}
+
+func (this *TxContent) Unmarshal(r []byte) error {
+	rem, err := this.UnmarshalMsg(r)
+	if len(rem) != 0 {
+		return errors.New("unmarshal error.")
+	}
+
+	return err
+}
+
 type Transaction struct {
 	TxContent `msg:"txContent"`
 	Signature []byte `msg:"signature"`
@@ -90,6 +103,10 @@ func (this *Transaction) Verify(pubkey *crypto.PublicKey) error {
 	}
 
 	return pubkey.Verify(hash[:], this.Signature)
+}
+
+func (this *Transaction) Validation() error {
+	return nil
 }
 
 func (this *Transaction) GetNonce() uint64      { return this.Nonce }
