@@ -142,7 +142,7 @@ func (z *TxContent) DecodeMsg(dc *msgp.Reader) (err error) {
 		}
 		switch msgp.UnsafeString(field) {
 		case "chainID":
-			z.ChainID, err = dc.ReadUint64()
+			z.ChainID, err = dc.ReadByte()
 			if err != nil {
 				return
 			}
@@ -194,7 +194,7 @@ func (z *TxContent) EncodeMsg(en *msgp.Writer) (err error) {
 	if err != nil {
 		return
 	}
-	err = en.WriteUint64(z.ChainID)
+	err = en.WriteByte(z.ChainID)
 	if err != nil {
 		return
 	}
@@ -261,7 +261,7 @@ func (z *TxContent) MarshalMsg(b []byte) (o []byte, err error) {
 	// map header, size 7
 	// string "chainID"
 	o = append(o, 0x87, 0xa7, 0x63, 0x68, 0x61, 0x69, 0x6e, 0x49, 0x44)
-	o = msgp.AppendUint64(o, z.ChainID)
+	o = msgp.AppendByte(o, z.ChainID)
 	// string "nonce"
 	o = append(o, 0xa5, 0x6e, 0x6f, 0x6e, 0x63, 0x65)
 	o = msgp.AppendUint64(o, z.Nonce)
@@ -306,7 +306,7 @@ func (z *TxContent) UnmarshalMsg(bts []byte) (o []byte, err error) {
 		}
 		switch msgp.UnsafeString(field) {
 		case "chainID":
-			z.ChainID, bts, err = msgp.ReadUint64Bytes(bts)
+			z.ChainID, bts, err = msgp.ReadByteBytes(bts)
 			if err != nil {
 				return
 			}
@@ -353,6 +353,6 @@ func (z *TxContent) UnmarshalMsg(bts []byte) (o []byte, err error) {
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *TxContent) Msgsize() (s int) {
-	s = 1 + 8 + msgp.Uint64Size + 6 + msgp.Uint64Size + 7 + z.Sender.Msgsize() + 10 + z.Recipient.Msgsize() + 6 + msgp.Int64Size + 4 + msgp.Int64Size + 5 + msgp.BytesPrefixSize + len(z.Data)
+	s = 1 + 8 + msgp.ByteSize + 6 + msgp.Uint64Size + 7 + z.Sender.Msgsize() + 10 + z.Recipient.Msgsize() + 6 + msgp.Int64Size + 4 + msgp.Int64Size + 5 + msgp.BytesPrefixSize + len(z.Data)
 	return
 }

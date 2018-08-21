@@ -6,10 +6,14 @@ import (
 	"github.com/d5c5ceb0/newchain/crypto"
 )
 
+const (
+	DefaultChainID byte = 1
+)
+
 //go:generate msgp -tests=false
 
 type TxContent struct {
-	ChainID   uint64         `msg:"chainID"`
+	ChainID   byte           `msg:"chainID"`
 	Nonce     uint64         `msg:"nonce"`
 	Sender    crypto.Address `msg:"sender"`
 	Recipient crypto.Address `msg:"recipient"`
@@ -31,7 +35,19 @@ type Transaction struct {
 	Signature []byte `msg:"signature"`
 }
 
-func NewTransaction() {}
+func NewTransaction(nonce uint64, from, to crypto.Address, value, fee int64, data []byte) *Transaction {
+	data := TxContent{
+		ChainID:   DefaultChainID,
+		Nonce:     nonce,
+		Sender:    &from,
+		Recipient: &to,
+		Value:     value,
+		Fee:       fee,
+		Data:      data,
+	}
+
+	return &Transaction{TxContent: data}
+}
 
 func (this *Transaction) Marshal() ([]byte, error) {
 	return this.MarshalMsg(nil)
