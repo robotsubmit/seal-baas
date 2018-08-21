@@ -47,6 +47,10 @@ type Block struct {
 	Signature []byte        `msg:"sig"`
 }
 
+func NewBlock() Block {
+	return Block{}
+}
+
 func (this *Block) Marshal() ([]byte, error) {
 	return this.MarshalMsg(nil)
 }
