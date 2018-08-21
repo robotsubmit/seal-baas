@@ -2,8 +2,10 @@ package types
 
 import (
 	"errors"
+	"time"
 
 	"github.com/d5c5ceb0/newchain/crypto"
+	"github.com/d5c5ceb0/newchain/types"
 )
 
 //go:generate msgp -tests=false
@@ -103,6 +105,23 @@ func (this *Block) GetTransactionByHash(hash *crypto.Digest) (Transaction, error
 	}
 
 	return nil, errors.New("no transaction")
+}
+
+func NewGenesisBlock() *types.Block {
+	genesisHeader := &Header{
+		ChainID:     DefaultChainID,
+		ParentHash:  crypto.Digest{},
+		TxRootHash:  crypto.Digest{},
+		Height:      0,
+		Nonce:       0,
+		CreatedTime: time.Date(2018, time.August, 0, 0, 0, 0, 0, time.UTC).Unix(),
+	}
+	// genesis block
+	genesisBlock := &Block{
+		Header: genesisHeader,
+	}
+
+	return genesisBlock
 }
 
 func (this *Block) GetChainID() byte               { return this.ChainID }

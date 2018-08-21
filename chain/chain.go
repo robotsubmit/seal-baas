@@ -24,7 +24,7 @@ func NewBlockChain(db *storage.Database) *BlockChain {
 	}
 
 	if cur, err := bc.CurrentBlock(); err != nil {
-		bc.genesisBlock = NewGenesisBlock()
+		bc.genesisBlock = types.NewGenesisBlock()
 		bc.currentBlock = bc.genesisBlock
 		bc.height = 0
 	} else {
