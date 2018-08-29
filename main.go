@@ -16,13 +16,13 @@ func main() {
 	}
 	blockchain := chain.NewBlockChain(db)
 
-	consensus := pow.NewPowServer(blockchain)
+	consensus := pow.NewPowServer(blockchain, nil)
 	consensus.Start()
 
-	for i := 0; i < 100000; i++ {
+	for {
 		time.Sleep(5 * time.Second)
 		fmt.Println(blockchain.CurrentBlockHash())
 	}
 
-	return
+	select {}
 }

@@ -13,12 +13,9 @@ type Header struct {
 	ChainID    byte          `msg:"id"`
 	ParentHash crypto.Digest `msg:"parent"`
 	TxRootHash crypto.Digest `msg:"txRoot"`
-	//ReceiptHash crypto.Digest `msg:"receiptHash"`
-	//AccountHash crypto.Digest `msg:"accountHash"`
-	Height      uint64         `msg:"height"`
-	Nonce       uint64         `msg:"nonce"`
-	CreatedTime int64          `msg:"time"`
-	Coinbase    crypto.Address `msg:"coinbase"`
+	Height     uint64        `msg:"height"`
+	Nonce      uint64        `msg:"nonce"`
+	Timestamp  int64         `msg:"time"`
 }
 
 func (this *Header) Marshal() ([]byte, error) {
@@ -48,12 +45,23 @@ type Block struct {
 	Signature []byte        `msg:"sig"`
 }
 
-func NewBlock(h uint64) *Block {
+func NewBlock(parentBlock *Block, txs []*Transaction) *Block {
+	pHash, _ := parentBlock.Hash()
 	return &Block{
 		Header: Header{
-			Height: h,
+			ChainID:    parentBlock.ChainID,
+			ParentHash: pHash,
+			TxRootHash: crypto.Digest{}, //TODO use tx merkle tree
+			Height:     parentBlock.Height + 1,
+			Nonce:      0,
+			Timestamp:  time.Now().Unix(),
 		},
 	}
+}
+
+func (this *Block) ChangeNonce(nonce uint64) *Block {
+	this.Nonce = nonce
+	return this
 }
 
 func (this *Block) Marshal() ([]byte, error) {
@@ -120,12 +128,12 @@ func (this *Block) GetTransactionByHash(hash *crypto.Digest) (Transaction, error
 
 func NewGenesisBlock() *Block {
 	genesisHeader := &Header{
-		ChainID:     DefaultChainID,
-		ParentHash:  crypto.Digest{},
-		TxRootHash:  crypto.Digest{},
-		Height:      0,
-		Nonce:       0,
-		CreatedTime: time.Date(2018, time.August, 0, 0, 0, 0, 0, time.UTC).Unix(),
+		ChainID:    DefaultChainID,
+		ParentHash: crypto.Digest{},
+		TxRootHash: crypto.Digest{},
+		Height:     0,
+		Nonce:      0,
+		Timestamp:  time.Date(2018, time.August, 0, 0, 0, 0, 0, time.UTC).Unix(),
 	}
 	// genesis block
 	genesisBlock := &Block{
@@ -140,8 +148,7 @@ func (this *Block) GetParentHash() crypto.Digest   { return this.ParentHash }
 func (this *Block) GetTxRootHash() crypto.Digest   { return this.TxRootHash }
 func (this *Block) GetHeight() uint64              { return this.Height }
 func (this *Block) GetNonce() uint64               { return this.Nonce }
-func (this *Block) GetCreateTime() int64           { return this.CreatedTime }
-func (this *Block) GetCoinbase() crypto.Address    { return this.Coinbase }
+func (this *Block) GetCreateTime() int64           { return this.Timestamp }
 func (this *Block) GetHeader() *Header             { return &this.Header }
 func (this *Block) GetTransactions() []Transaction { return this.Txs }
 func (this *Block) GetSignature() []byte           { return this.Signature }

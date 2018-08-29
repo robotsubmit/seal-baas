@@ -35,7 +35,6 @@ func NewBlockChain(db storage.Database) *BlockChain {
 
 	return bc
 }
-
 func (this *BlockChain) GetBlockByHash(hash *crypto.Digest) (*types.Block, error) {
 	return this.blockDb.GetBlockByHash(hash)
 }

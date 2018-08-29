@@ -229,12 +229,7 @@ func (z *Header) DecodeMsg(dc *msgp.Reader) (err error) {
 				return
 			}
 		case "time":
-			z.CreatedTime, err = dc.ReadInt64()
-			if err != nil {
-				return
-			}
-		case "coinbase":
-			err = z.Coinbase.DecodeMsg(dc)
+			z.Timestamp, err = dc.ReadInt64()
 			if err != nil {
 				return
 			}
@@ -250,9 +245,9 @@ func (z *Header) DecodeMsg(dc *msgp.Reader) (err error) {
 
 // EncodeMsg implements msgp.Encodable
 func (z *Header) EncodeMsg(en *msgp.Writer) (err error) {
-	// map header, size 7
+	// map header, size 6
 	// write "id"
-	err = en.Append(0x87, 0xa2, 0x69, 0x64)
+	err = en.Append(0x86, 0xa2, 0x69, 0x64)
 	if err != nil {
 		return
 	}
@@ -301,16 +296,7 @@ func (z *Header) EncodeMsg(en *msgp.Writer) (err error) {
 	if err != nil {
 		return
 	}
-	err = en.WriteInt64(z.CreatedTime)
-	if err != nil {
-		return
-	}
-	// write "coinbase"
-	err = en.Append(0xa8, 0x63, 0x6f, 0x69, 0x6e, 0x62, 0x61, 0x73, 0x65)
-	if err != nil {
-		return
-	}
-	err = z.Coinbase.EncodeMsg(en)
+	err = en.WriteInt64(z.Timestamp)
 	if err != nil {
 		return
 	}
@@ -320,9 +306,9 @@ func (z *Header) EncodeMsg(en *msgp.Writer) (err error) {
 // MarshalMsg implements msgp.Marshaler
 func (z *Header) MarshalMsg(b []byte) (o []byte, err error) {
 	o = msgp.Require(b, z.Msgsize())
-	// map header, size 7
+	// map header, size 6
 	// string "id"
-	o = append(o, 0x87, 0xa2, 0x69, 0x64)
+	o = append(o, 0x86, 0xa2, 0x69, 0x64)
 	o = msgp.AppendByte(o, z.ChainID)
 	// string "parent"
 	o = append(o, 0xa6, 0x70, 0x61, 0x72, 0x65, 0x6e, 0x74)
@@ -344,13 +330,7 @@ func (z *Header) MarshalMsg(b []byte) (o []byte, err error) {
 	o = msgp.AppendUint64(o, z.Nonce)
 	// string "time"
 	o = append(o, 0xa4, 0x74, 0x69, 0x6d, 0x65)
-	o = msgp.AppendInt64(o, z.CreatedTime)
-	// string "coinbase"
-	o = append(o, 0xa8, 0x63, 0x6f, 0x69, 0x6e, 0x62, 0x61, 0x73, 0x65)
-	o, err = z.Coinbase.MarshalMsg(o)
-	if err != nil {
-		return
-	}
+	o = msgp.AppendInt64(o, z.Timestamp)
 	return
 }
 
@@ -396,12 +376,7 @@ func (z *Header) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				return
 			}
 		case "time":
-			z.CreatedTime, bts, err = msgp.ReadInt64Bytes(bts)
-			if err != nil {
-				return
-			}
-		case "coinbase":
-			bts, err = z.Coinbase.UnmarshalMsg(bts)
+			z.Timestamp, bts, err = msgp.ReadInt64Bytes(bts)
 			if err != nil {
 				return
 			}
@@ -418,6 +393,6 @@ func (z *Header) UnmarshalMsg(bts []byte) (o []byte, err error) {
 
 // Msgsize returns an upper bound estimate of the number of bytes occupied by the serialized message
 func (z *Header) Msgsize() (s int) {
-	s = 1 + 3 + msgp.ByteSize + 7 + z.ParentHash.Msgsize() + 7 + z.TxRootHash.Msgsize() + 7 + msgp.Uint64Size + 6 + msgp.Uint64Size + 5 + msgp.Int64Size + 9 + z.Coinbase.Msgsize()
+	s = 1 + 3 + msgp.ByteSize + 7 + z.ParentHash.Msgsize() + 7 + z.TxRootHash.Msgsize() + 7 + msgp.Uint64Size + 6 + msgp.Uint64Size + 5 + msgp.Int64Size
 	return
 }
